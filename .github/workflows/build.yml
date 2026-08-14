@@ -57,11 +57,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: upstream/pnpm-lock.yaml
 
-      - name: Enable corepack (official pnpm 9.11.0)
-        run: corepack enable
+      - name: Setup pnpm (official version 9.11.0)
+        run: npm install -g pnpm@9.11.0
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ hashFiles('upstream/pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
 
       - name: Install upstream dependencies
         run: pnpm install --frozen-lockfile --dir upstream
