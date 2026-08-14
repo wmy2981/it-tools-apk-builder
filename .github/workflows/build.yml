@@ -1,0 +1,126 @@
+name: build
+
+# 轮询官方 releases API，发现新正式版后构建 APK 并上传 artifact。
+# release.yml 通过 workflow_run 监听本工作流，成功后创建 Release 并附 APK。
+on:
+  schedule:
+    # 每周一 08:00 UTC 检查一次（官方 GitHub Release 约年更一次，7 天粒度足够）
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # 手动触发（首次部署用，立即构建当前最新官方版）
+
+permissions:
+  contents: read
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      official_tag: ${{ steps.check.outputs.official_tag }}
+      official_release_url: ${{ steps.check.outputs.official_release_url }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # 官方最新正式 release（releases/latest 恒为非 prerelease）
+          LATEST=$(gh api repos/CorentinTh/it-tools/releases/latest --jq '{tag: .tag_name, url: .html_url}')
+          TAG=$(echo "$LATEST" | jq -r .tag)
+          URL=$(echo "$LATEST" | jq -r .url)
+          echo "official_tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "official_release_url=$URL" >> "$GITHUB_OUTPUT"
+          # 幂等判断：本仓库是否已发布过 v<官方tag>-android
+          if gh release view "${TAG}-android" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Already published: ${TAG}-android, skipping build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New upstream release detected: $TAG"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check-upstream
+    if: needs.check-upstream.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # 本仓库（含 Capacitor 壳工程）
+
+      - name: Checkout upstream it-tools (official tag)
+        uses: actions/checkout@v4
+        with:
+          repository: CorentinTh/it-tools
+          ref: ${{ needs.check-upstream.outputs.official_tag }}
+          path: upstream
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: upstream/pnpm-lock.yaml
+
+      - name: Enable corepack (official pnpm 9.11.0)
+        run: corepack enable
+
+      - name: Install upstream dependencies
+        run: pnpm install --frozen-lockfile --dir upstream
+
+      - name: Build web app (vue-tsc + vite)
+        run: pnpm --dir upstream build
+
+      - name: Replace launcher icons with official it-tools icon
+        env:
+          TAG: ${{ needs.check-upstream.outputs.official_tag }}
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/CorentinTh/it-tools/${TAG}/public/android-chrome-512x512.png" -o /tmp/icon.png
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+            cp /tmp/icon.png "android/app/src/main/res/mipmap-${d}/ic_launcher.png"
+            cp /tmp/icon.png "android/app/src/main/res/mipmap-${d}/ic_launcher_round.png"
+          done
+
+      - name: Copy web build into shell webDir
+        run: cp -r upstream/dist ./dist
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install shell dependencies and sync Capacitor
+        run: npm ci && npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew assembleDebug
+
+      - name: Collect artifacts with metadata
+        id: collect
+        env:
+          TAG: ${{ needs.check-upstream.outputs.official_tag }}
+          URL: ${{ needs.check-upstream.outputs.official_release_url }}
+        run: |
+          set -euo pipefail
+          APK_NAME="it-tools-${TAG}-debug.apk"
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk "release/${APK_NAME}"
+          sha256sum "release/${APK_NAME}" > "release/${APK_NAME}.sha256"
+          jq -n \
+            --arg tag "$TAG" \
+            --arg url "$URL" \
+            --arg apk "$APK_NAME" \
+            '{official_tag: $tag, official_release_url: $url, apk_name: $apk}' \
+            > release/build-meta.json
+          echo "APK_NAME=${APK_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: release/
+          if-no-files-found: error

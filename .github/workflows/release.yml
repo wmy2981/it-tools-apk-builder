@@ -1,0 +1,72 @@
+name: release
+
+# 监听 build.yml 成功：创建 Release（v<官方tag>-android）并上传 APK 与 SHA256。
+# build 未产出 artifact（无新版本）时正常跳过。
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Check build run artifacts
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          COUNT=$(gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts" --jq '.artifacts | length')
+          echo "artifact_count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download APK artifact
+        if: steps.check.outputs.artifact_count > 0
+        uses: actions/download-artifact@v4
+        with:
+          name: apk
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.check.outputs.run_id }}
+          path: release
+
+      - name: Publish GitHub Release
+        if: steps.check.outputs.artifact_count > 0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG=$(jq -r .official_tag release/build-meta.json)
+          URL=$(jq -r .official_release_url release/build-meta.json)
+          APK_NAME=$(jq -r .apk_name release/build-meta.json)
+          OUR_TAG="${TAG}-android"
+
+          # 幂等保护：Release 已存在则跳过
+          if gh release view "$OUR_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release ${OUR_TAG} already exists, skipping"
+            exit 0
+          fi
+
+          OFFICIAL_BODY=$(gh api "repos/CorentinTh/it-tools/releases/tags/${TAG}" --jq '.body // ""')
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY"
+          NOTES=$(printf '%s\n' \
+            "Unofficial Android build of [it-tools](${URL}) at tag \`${TAG}\`." \
+            "" \
+            "- **This is NOT an official build.** Built automatically by [it-tools-apk-builder](${REPO_URL}) — no affiliation with the it-tools authors." \
+            "- License: [GPLv3](https://github.com/CorentinTh/it-tools/blob/main/LICENSE). Corresponding source: [upstream tag ${TAG}](${URL}) + [this repository](${REPO_URL})." \
+            "- Install by sideloading the APK (allow \"Unknown sources\" in Android settings)." \
+            "" \
+            "---" \
+            "" \
+            "## Upstream changelog (${TAG})" \
+            "" \
+            "${OFFICIAL_BODY}")
+
+          gh release create "$OUR_TAG" --repo "$GITHUB_REPOSITORY" \
+            --title "IT Tools ${TAG} (Unofficial Android)" \
+            --notes "$NOTES" \
+            "release/${APK_NAME}" "release/${APK_NAME}.sha256"

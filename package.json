@@ -1,0 +1,18 @@
+{
+  "name": "it-tools-apk-builder",
+  "version": "1.0.0",
+  "description": "Automated Android APK builder for CorentinTh/it-tools (unofficial, GPLv3)",
+  "license": "GPL-3.0-only",
+  "type": "commonjs",
+  "scripts": {
+    "android:sync": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

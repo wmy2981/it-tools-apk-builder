@@ -1,0 +1,6 @@
+# 强制 LF：防止 Windows autocrlf 破坏 shell 脚本（CI 在 Linux 上执行）
+* text=auto
+android/gradlew text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
