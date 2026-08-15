@@ -100,9 +100,13 @@ jobs:
         run: npm ci && npx cap sync android
 
       - name: Build debug APK
+        env:
+          TAG: ${{ needs.check-upstream.outputs.official_tag }}
         run: |
           chmod +x android/gradlew
-          cd android && ./gradlew assembleDebug
+          cd android && ./gradlew assembleDebug \
+            -PversionName="${TAG#v}" \
+            -PversionCode="$(echo "${TAG#v}" | cut -d- -f1 | tr -d '.')"
 
       - name: Collect artifacts with metadata
         id: collect
