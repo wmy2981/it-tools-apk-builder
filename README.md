@@ -5,6 +5,10 @@
 
 Automatically packages [IT Tools](https://it-tools.tech) — a collection of handy online tools for developers — into an installable Android APK, following the official release process.
 
+<p align="center">
+  <img src="assets/readme/pipeline.svg" width="100%" alt="Three-stage pipeline: the upstream CorentinTh/it-tools release at tag v2024.10.22-7ca5933; build.yml checking out that tag, running pnpm build, npx cap sync android and gradlew assembleDebug; then release.yml publishing GitHub Release v2024.10.22-7ca5933-android with the debug APK and its SHA-256 checksum">
+</p>
+
 ## How it works
 
 | Workflow | Trigger | Job |

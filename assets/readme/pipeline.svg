@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-labelledby="pTitle pDesc">
+  <title id="pTitle">it-tools-apk-builder pipeline</title>
+  <desc id="pDesc">An unofficial GitHub Actions pipeline in three stages: the upstream CorentinTh/it-tools release at tag v2024.10.22-7ca5933; build.yml running weekly checks out that tag, builds the web app with pnpm, syncs Capacitor and assembles a debug APK with Gradle; release.yml then publishes GitHub Release v2024.10.22-7ca5933-android carrying the debug APK and its SHA-256 checksum, ready to sideload.</desc>
+
+  <defs>
+    <marker id="flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#B9C7BF"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="500" rx="24" fill="#F4F8F5"/>
+  <rect x="0.75" y="0.75" width="1198.5" height="498.5" rx="23.25" fill="none" stroke="#E2EAE5" stroke-width="1.5"/>
+
+  <!-- identity -->
+  <g id="identity">
+    <text x="56" y="78" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="14" letter-spacing="2.4" fill="#0F7A42">UNOFFICIAL · GITHUB ACTIONS · GPLv3</text>
+    <text x="56" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="42" font-weight="700" fill="#111A16">it-tools-apk-builder</text>
+    <text x="56" y="184" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="17" fill="#6B7A72">Turns every upstream IT Tools release into an installable, debug-signed Android APK — no manual build.</text>
+  </g>
+
+  <!-- flow arrows -->
+  <g stroke="#B9C7BF" stroke-width="2" marker-end="url(#flow)">
+    <line x1="390" y1="340" x2="430" y2="340"/>
+    <line x1="769" y1="340" x2="809" y2="340"/>
+  </g>
+
+  <!-- stage 1 -->
+  <g id="stage-upstream">
+    <rect x="56" y="236" width="330" height="210" rx="14" fill="#FFFFFF" stroke="#DFE7E2" stroke-width="1.5"/>
+    <text x="78" y="266" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" letter-spacing="1.6" fill="#6B7A72">UPSTREAM</text>
+    <text x="78" y="306" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" fill="#111A16">it-tools release</text>
+    <text x="78" y="346" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#37424B">CorentinTh/it-tools</text>
+    <text x="78" y="374" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#0F7A42">v2024.10.22-7ca5933</text>
+    <text x="78" y="402" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#8B968F">stable tag only</text>
+  </g>
+
+  <!-- stage 2 -->
+  <g id="stage-build">
+    <rect x="435" y="236" width="330" height="210" rx="14" fill="#FFFFFF" stroke="#DFE7E2" stroke-width="1.5"/>
+    <text x="457" y="266" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" letter-spacing="1.6" fill="#0969DA">BUILD.YML · MON 08:00 UTC</text>
+    <text x="457" y="306" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" fill="#111A16">GitHub Actions</text>
+    <text x="457" y="344" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#37424B">checkout &lt;tag&gt;</text>
+    <text x="457" y="370" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#37424B">pnpm build</text>
+    <text x="457" y="396" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#37424B">npx cap sync android</text>
+    <text x="457" y="422" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#0F7A42">gradlew assembleDebug</text>
+  </g>
+
+  <!-- stage 3 -->
+  <g id="stage-release">
+    <rect x="814" y="236" width="330" height="210" rx="14" fill="#FFFFFF" stroke="#DFE7E2" stroke-width="1.5"/>
+    <text x="836" y="266" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" letter-spacing="1.6" fill="#0F7A42">RELEASE.YML · WORKFLOW_RUN</text>
+    <text x="836" y="306" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="19" fill="#111A16">GitHub Release</text>
+    <text x="836" y="344" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#0F7A42">v2024.10.22-7ca5933-android</text>
+    <text x="836" y="370" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="16" fill="#37424B">debug APK + .sha256</text>
+    <text x="836" y="396" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#8B968F">sideload to install</text>
+  </g>
+</svg>
